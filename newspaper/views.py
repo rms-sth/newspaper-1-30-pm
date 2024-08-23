@@ -5,6 +5,7 @@ from newspaper.models import Category, Post, Tag
 from datetime import timedelta
 from django.utils import timezone
 
+
 class HomeView(ListView):
     model = Post
     template_name = "aznews/home.html"
@@ -33,6 +34,22 @@ class HomeView(ListView):
         ).order_by("-published_at")[:7]
 
         context["categories"] = Category.objects.all()[:4]
-        context["tags"] = Tag.objects.all()[:4]
+        context["tags"] = Tag.objects.all()[:12]
+
+        context["trending_posts"] = Post.objects.filter(
+            published_at__isnull=False, status="active"
+        ).order_by("-views_count")[:3]
 
         return context
+
+
+class PostListView(ListView):
+    model = Post
+    template_name = "aznews/list/list.html"
+    context_object_name = "posts"
+    paginate_by = 1
+
+    def get_queryset(self):
+        return Post.objects.filter(
+            published_at__isnull=False, status="active"
+        ).order_by("-published_at")
