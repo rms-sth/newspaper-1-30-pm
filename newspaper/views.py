@@ -1,4 +1,4 @@
-from django.views.generic import ListView
+from django.views.generic import ListView, DetailView
 
 from newspaper.models import Category, Post, Tag
 
@@ -33,13 +33,6 @@ class HomeView(ListView):
             published_at__isnull=False, status="active"
         ).order_by("-published_at")[:7]
 
-        context["categories"] = Category.objects.all()[:4]
-        context["tags"] = Tag.objects.all()[:12]
-
-        context["trending_posts"] = Post.objects.filter(
-            published_at__isnull=False, status="active"
-        ).order_by("-views_count")[:3]
-
         return context
 
 
@@ -53,3 +46,14 @@ class PostListView(ListView):
         return Post.objects.filter(
             published_at__isnull=False, status="active"
         ).order_by("-published_at")
+
+
+class PostDetailView(DetailView):
+    model = Post
+    template_name = "aznews/detail/detail.html"
+    context_object_name = "post"
+
+    def get_queryset(self):
+        query = super().get_queryset()
+        query = query.filter(published_at__isnull=False, status="active")
+        return query
