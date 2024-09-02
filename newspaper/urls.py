@@ -8,4 +8,16 @@ urlpatterns = [
     path("post-comment/", views.CommentView.as_view(), name="post-comment"),
     path("about/", views.AboutView.as_view(), name="about"),
     path("contact/", views.ContactView.as_view(), name="contact"),
+    path(
+        "post-by-category/<int:category_id>/",
+        views.PostByCategoryView.as_view(),
+        name="post-by-category",
+    ),
+    path(
+        "post-by-tag/<int:tag_id>/",
+        views.PostByTagView.as_view(),
+        name="post-by-tag",
+    ),
+    path("newsletter/", views.NewsletterView.as_view(), name="newsletter"),
+    path("post-search/", views.PostSearchView.as_view(), name="post-search"),
 ]

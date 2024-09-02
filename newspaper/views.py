@@ -2,7 +2,7 @@ from django.shortcuts import redirect, render
 from django.views import View
 from django.views.generic import ListView, DetailView, TemplateView
 
-from newspaper.forms import CommentForm, ContactForm
+from newspaper.forms import CommentForm, ContactForm, NewsletterForm
 from newspaper.models import Category, Post, Tag
 from django.contrib import messages
 
@@ -133,3 +133,102 @@ class ContactView(View):
                 self.template_name,
                 {"form": form},
             )
+
+
+class PostByCategoryView(ListView):
+    model = Post
+    template_name = "aznews/list/list.html"
+    context_object_name = "posts"
+    paginate_by = 1
+
+    def get_queryset(self):
+        query = super().get_queryset()
+        query = query.filter(
+            published_at__isnull=False,
+            status="active",
+            category__id=self.kwargs["category_id"],
+        ).order_by("-published_at")
+        return query
+
+
+class PostByTagView(ListView):
+    model = Post
+    template_name = "aznews/list/list.html"
+    context_object_name = "posts"
+    paginate_by = 1
+
+    def get_queryset(self):
+        query = super().get_queryset()
+        query = query.filter(
+            published_at__isnull=False,
+            status="active",
+            tag__id=self.kwargs["tag_id"],
+        ).order_by("-published_at")
+        return query
+
+
+from django.http import JsonResponse
+
+
+class NewsletterView(View):
+    def post(self, request):
+        is_ajax = request.headers.get("x-requested-with")
+        if is_ajax == "XMLHttpRequest":
+            form = NewsletterForm(request.POST)
+            if form.is_valid():
+                form.save()
+                return JsonResponse(
+                    {
+                        
+                        "success": True,
+                        "message": "Successfully subscribed to the newsletter.",
+                    },
+                    status=201,
+                )
+            else:
+                return JsonResponse(
+                    {
+                        "success": False,
+                        "message": "Cannot subscribe to the newsletter.",
+                    },
+                    status=400,
+                )
+        else:
+            return JsonResponse(
+                {
+                    "success": False,
+                    "message": "Cannot process. Must be an AJAX XMLHttpRequest",
+                },
+                status=400,
+            )
+
+from django.core.paginator import PageNotAnInteger, Paginator
+from django.db.models import Q
+
+
+class PostSearchView(View):
+    template_name = "aznews/list/list.html"
+
+    def get(self, request, *args, **kwargs):
+        query = request.GET["query"]  # query=nepal search => title=nepal or content=nepal NEPAL
+        post_list = Post.objects.filter(
+            (Q(title__icontains=query) | Q(content__icontains=query))
+            & Q(status="active")
+            & Q(published_at__isnull=False)
+        ).order_by("-published_at")
+
+        # pagination start
+        page = request.GET.get("page", 1)  # 2
+        paginate_by = 2
+        paginator = Paginator(post_list, paginate_by)
+        try:
+            posts = paginator.page(page)
+        except PageNotAnInteger:
+            posts = paginator.page(1)
+
+        # pagination end
+        return render(
+            request,
+            self.template_name,
+            {"page_obj": posts, "query": query},
+        )

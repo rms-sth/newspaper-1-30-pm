@@ -10,17 +10,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="manifest" href="site.webmanifest" />
 	
-    <link rel="shortcut icon" type="image/x-icon" href="{% static 'aznews/img/favicon.ico' %}" />
+    <link rel="shortcut icon"
+          type="image/x-icon"
+          href="{% static 'aznews/img/favicon.ico' %}" />
 
     <!-- CSS here -->
     <link rel="stylesheet" href="{% static 'aznews/css/bootstrap.min.css' %}" />
-    <link rel="stylesheet" href="{% static 'aznews/css/owl.carousel.min.css' %}" />
+    <link rel="stylesheet"
+          href="{% static 'aznews/css/owl.carousel.min.css' %}" />
     <link rel="stylesheet" href="{% static 'aznews/css/ticker-style.css' %}" />
     <link rel="stylesheet" href="{% static 'aznews/css/flaticon.css' %}" />
     <link rel="stylesheet" href="{% static 'aznews/css/slicknav.css' %}" />
     <link rel="stylesheet" href="{% static 'aznews/css/animate.min.css' %}" />
     <link rel="stylesheet" href="{% static 'aznews/css/magnific-popup.css' %}" />
-    <link rel="stylesheet" href="{% static 'aznews/css/fontawesome-all.min.css' %}" />
+    <link rel="stylesheet"
+          href="{% static 'aznews/css/fontawesome-all.min.css' %}" />
     <link rel="stylesheet" href="{% static 'aznews/css/themify-icons.css' %}" />
     <link rel="stylesheet" href="{% static 'aznews/css/slick.css' %}" />
     <link rel="stylesheet" href="{% static 'aznews/css/nice-select.css' %}" />
@@ -29,7 +33,7 @@
 
   <body>
  
-  
+ 
 
     {% include "aznews/header.html" %}
 
@@ -80,6 +84,61 @@
     <!-- Jquery Plugins, main Jquery -->
     <script src="{% static 'aznews/js/plugins.js' %}"></script>
     <script src="{% static 'aznews/js/main.js' %}"></script>
+
+     <script>
+        $(".pagination_number").click(function(e) {
+            // do not perform the default action
+            e.preventDefault();
+            // http://localhost:8000/post-search/
+            let current_url = window.location.href.split('?')[0];
+            let params = new URL(document.location).searchParams;
+            let query = params.get("query"); // a
+            let href = $(this).attr('href'); // ?page=2
+            // http://localhost:8000/post-search/?page=2&query=a
+            let new_url = `${current_url}${href}&query=${query}`;
+            window.location.replace(new_url);
+        });
+    </script>
+
+    <script>
+        $("#newsletter_side_form").submit(function(e) {
+            e.preventDefault()
+            let serializedData = $(this).serialize()
+
+            $.ajax({
+                type: "POST",
+                url: "{% url 'newsletter' %}",
+                data: serializedData,
+                success: function(response) {
+
+                    $("#newsletter_side_message").append(`
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                          ${response.message}
+                          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>        
+                    `)
+                    setTimeout(function() {
+                        $(".alert").alert('close')
+                    }, 2000)
+                },
+                error: function(response) {
+                    $("#newsletter_side_message").append(`
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                          ${response.responseJSON.message}
+                          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                          </button>
+                        </div>        
+                    `)
+                    setTimeout(function() {
+                        $(".alert").alert('close')
+                    }, 2000)
+                }
+            })
+        })
+    </script>
  
   </body>
 </html>
